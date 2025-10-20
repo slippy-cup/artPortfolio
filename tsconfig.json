@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "es6",            // modern JavaScript output
+    "module": "es6",            // modern import/export system
+    "rootDir": "src",           // where your TypeScript files live
+    "outDir": "js",             // where compiled JS files should go
+    "strict": true,
+    "esModuleInterop": true
+  },
+  "include": ["src/**/*"]       // include all .ts files inside /src
+}
+
