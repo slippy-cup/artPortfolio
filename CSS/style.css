@@ -305,6 +305,8 @@ GALLERY
   transform: translateY(-2px);
 }
 
+
+
 /* ==============================================
  MODAL 
 ============================================== */
@@ -408,3 +410,55 @@ RESPONSIVE — Maintain proportions on smaller screens
     right: 25px;
   }
 }
+
+/* ==============================================
+2D ART GALLERY (art.html)
+============================================== */
+
+.art-section {
+  background-color: rgba(252, 197, 229, 0.75);
+  border-radius: 24px;
+  padding: 90px 40px 50px;    
+  max-width: 1300px;
+  margin: 120px auto 80px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  font-family: 'Titan One', sans-serif;
+  backdrop-filter: blur(8px);
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+/* let .art-piece blend in as part of the grid */
+.art-section .art-piece {
+  display: contents; 
+}
+
+/* every art image in the 2D gallery */
+.art-section img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px;
+  object-fit: contain;           /* show whole artwork, no cropping */
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 251, 226, 0.7);
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.art-section img:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 700px) {
+  .art-section {
+    padding: 80px 20px 40px;
+    margin: 110px 10px 60px;
+    grid-template-columns: 1fr;
+  }
+}
+
+

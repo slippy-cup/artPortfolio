@@ -84,13 +84,18 @@ async function preloadAllAssets(): Promise<void> {
 // =============================
 //  GALLERY GENERATION
 // =============================
+// =============================
+//  GALLERY GENERATION (HOME PAGE ONLY)
+// =============================
 function generateGallery(): void {
   const gallery = document.getElementById("gallery");
-  const modal = document.getElementById("modal") as HTMLElement;
+  if (!gallery) return; // not on home page
+
+  const modal = document.getElementById("modal") as HTMLElement | null;
+  if (!modal) return; // safety: only run if modal exists
+
   const modalContent = modal.querySelector(".modal-content") as HTMLElement;
   const closeModal = modal.querySelector(".close") as HTMLElement;
-
-  if (!gallery) return;
 
   galleryItems.forEach((item) => {
     const div = document.createElement("div");
@@ -132,6 +137,7 @@ function generateGallery(): void {
   });
 }
 
+
 // =============================
 //  MODAL FUNCTIONALITY
 // =============================
@@ -161,6 +167,92 @@ function openModal(item: GalleryItem, modal: HTMLElement, modalContent: HTMLElem
     modalContent.appendChild(iframe);
   }
 }
+
+// =============================
+//  2D ART GALLERY
+// =============================
+document.addEventListener("DOMContentLoaded", () => {
+  const galleryImages = Array.from(
+    document.querySelectorAll<HTMLImageElement>(".art-section img")
+  );
+
+  if (!galleryImages.length) return;
+
+  const modal = document.createElement("div");
+  modal.className = "modal hidden";
+  modal.innerHTML = `
+    <button class="close" aria-label="Close">&times;</button>
+    <img class="modal-content" alt="">
+    <button class="nav prev" aria-label="Previous">&#10094;</button>
+    <button class="nav next" aria-label="Next">&#10095;</button>
+  `;
+  document.body.appendChild(modal);
+
+  const modalImg = modal.querySelector<HTMLImageElement>(".modal-content")!;
+  const closeBtn  = modal.querySelector<HTMLButtonElement>(".close")!;
+  const prevBtn   = modal.querySelector<HTMLButtonElement>(".prev")!;
+  const nextBtn   = modal.querySelector<HTMLButtonElement>(".next")!;
+
+  let currentIndex = 0;
+
+  const disableScroll = () => document.body.classList.add("no-scroll");
+  const enableScroll  = () => document.body.classList.remove("no-scroll");
+
+  function fitImageToViewport(img: HTMLImageElement) {
+    const vw = window.innerWidth * 0.95;
+    const vh = window.innerHeight * 0.90;
+
+    const scale = Math.min(vw / img.naturalWidth, vh / img.naturalHeight, 1);
+    img.style.width = `${img.naturalWidth * scale}px`;
+    img.style.height = "auto";
+  }
+
+  function openAt(index: number) {
+    currentIndex = (index + galleryImages.length) % galleryImages.length;
+
+    modalImg.src = galleryImages[currentIndex].src;
+    modal.classList.remove("hidden");
+    disableScroll();
+
+    if (modalImg.complete) fitImageToViewport(modalImg);
+    else modalImg.onload = () => fitImageToViewport(modalImg);
+  }
+
+  function go(delta: number) {
+    openAt(currentIndex + delta);
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+    enableScroll();
+  }
+
+  galleryImages.forEach((img, i) => {
+    img.addEventListener("click", () => openAt(i));
+  });
+
+  closeBtn.addEventListener("click", closeModal);
+  prevBtn.addEventListener("click", (e) => { e.stopPropagation(); go(-1); });
+  nextBtn.addEventListener("click", (e) => { e.stopPropagation(); go(1); });
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeModal();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+    else if (e.key === "ArrowLeft") go(-1);
+    else if (e.key === "ArrowRight") go(1);
+  });
+
+  window.addEventListener("resize", () => {
+    if (!modal.classList.contains("hidden")) fitImageToViewport(modalImg);
+  });
+  
+});
+
+
+
 
 
 
