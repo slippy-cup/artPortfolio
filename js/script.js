@@ -67,9 +67,6 @@ function preloadAllAssets() {
     });
 }
 // =============================
-//  GALLERY GENERATION
-// =============================
-// =============================
 //  GALLERY GENERATION (HOME PAGE ONLY)
 // =============================
 function generateGallery() {
@@ -120,16 +117,40 @@ function generateGallery() {
     });
 }
 // =============================
+//  MAIN 3D MODAL IMAGE SIZING
+// =============================
+let activeMainModalImg = null;
+function fitMainModalImageToViewport() {
+    if (!activeMainModalImg)
+        return;
+    const img = activeMainModalImg;
+    const vw = window.innerWidth * 0.95; // 95% of viewport
+    const vh = window.innerHeight * 0.90; // 90% of viewport
+    const naturalW = img.naturalWidth || img.width;
+    const naturalH = img.naturalHeight || img.height;
+    const scale = Math.min(vw / naturalW, vh / naturalH, 1);
+    img.style.width = `${naturalW * scale}px`;
+    img.style.height = "auto";
+}
+// =============================
 //  MODAL FUNCTIONALITY
 // =============================
 function openModal(item, modal, modalContent) {
     modal.classList.remove("hidden");
     modalContent.innerHTML = "";
+    activeMainModalImg = null;
     if (item.type === "image") {
         const img = document.createElement("img");
         img.src = item.src;
         img.alt = item.alt || "";
         modalContent.appendChild(img);
+        activeMainModalImg = img;
+        if (img.complete) {
+            fitMainModalImageToViewport();
+        }
+        else {
+            img.onload = () => fitMainModalImageToViewport();
+        }
     }
     else if (item.type === "video") {
         const vid = document.createElement("video");
@@ -149,26 +170,41 @@ function openModal(item, modal, modalContent) {
         modalContent.appendChild(iframe);
     }
 }
+// Resize handler for 3D modal only
+window.addEventListener("resize", () => {
+    const mainModal = document.getElementById("modal");
+    if (!mainModal)
+        return;
+    if (!mainModal.classList.contains("hidden") && activeMainModalImg) {
+        fitMainModalImageToViewport();
+    }
+});
 // =============================
 //  2D ART GALLERY
 // =============================
+// art gallery modal wiring (for art.html only)
 document.addEventListener("DOMContentLoaded", () => {
-    const galleryImages = Array.from(document.querySelectorAll(".art-section img"));
+    // Limit to pages that actually have .art-section
+    const artSection = document.querySelector(".art-section");
+    if (!artSection)
+        return;
+    const galleryImages = Array.from(artSection.querySelectorAll("img"));
     if (!galleryImages.length)
         return;
+    // Build a *separate* modal for art, with art-* class names
     const modal = document.createElement("div");
-    modal.className = "modal hidden";
+    modal.className = "art-modal art-hidden";
     modal.innerHTML = `
-    <button class="close" aria-label="Close">&times;</button>
-    <img class="modal-content" alt="">
-    <button class="nav prev" aria-label="Previous">&#10094;</button>
-    <button class="nav next" aria-label="Next">&#10095;</button>
+    <button class="art-close" aria-label="Close">&times;</button>
+    <img class="art-modal-content" alt="">
+    <button class="art-nav art-prev" aria-label="Previous">&#10094;</button>
+    <button class="art-nav art-next" aria-label="Next">&#10095;</button>
   `;
     document.body.appendChild(modal);
-    const modalImg = modal.querySelector(".modal-content");
-    const closeBtn = modal.querySelector(".close");
-    const prevBtn = modal.querySelector(".prev");
-    const nextBtn = modal.querySelector(".next");
+    const modalImg = modal.querySelector(".art-modal-content");
+    const closeBtn = modal.querySelector(".art-close");
+    const prevBtn = modal.querySelector(".art-prev");
+    const nextBtn = modal.querySelector(".art-next");
     let currentIndex = 0;
     const disableScroll = () => document.body.classList.add("no-scroll");
     const enableScroll = () => document.body.classList.remove("no-scroll");
@@ -182,7 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function openAt(index) {
         currentIndex = (index + galleryImages.length) % galleryImages.length;
         modalImg.src = galleryImages[currentIndex].src;
-        modal.classList.remove("hidden");
+        modal.classList.remove("art-hidden");
         disableScroll();
         if (modalImg.complete)
             fitImageToViewport(modalImg);
@@ -193,29 +229,43 @@ document.addEventListener("DOMContentLoaded", () => {
         openAt(currentIndex + delta);
     }
     function closeModal() {
-        modal.classList.add("hidden");
+        modal.classList.add("art-hidden");
         enableScroll();
     }
+    // click thumbnails
     galleryImages.forEach((img, i) => {
         img.addEventListener("click", () => openAt(i));
     });
+    // buttons
     closeBtn.addEventListener("click", closeModal);
-    prevBtn.addEventListener("click", (e) => { e.stopPropagation(); go(-1); });
-    nextBtn.addEventListener("click", (e) => { e.stopPropagation(); go(1); });
+    prevBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        go(-1);
+    });
+    nextBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        go(1);
+    });
+    // click backdrop to close
     modal.addEventListener("click", (e) => {
         if (e.target === modal)
             closeModal();
     });
+    // keyboard controls
     document.addEventListener("keydown", (e) => {
+        if (modal.classList.contains("art-hidden"))
+            return;
         if (e.key === "Escape")
             closeModal();
-        else if (e.key === "ArrowLeft")
+        if (e.key === "ArrowLeft")
             go(-1);
-        else if (e.key === "ArrowRight")
+        if (e.key === "ArrowRight")
             go(1);
     });
+    // keep size correct on resize
     window.addEventListener("resize", () => {
-        if (!modal.classList.contains("hidden"))
+        if (!modal.classList.contains("art-hidden") && modalImg.src) {
             fitImageToViewport(modalImg);
+        }
     });
 });
