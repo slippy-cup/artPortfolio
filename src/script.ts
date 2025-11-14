@@ -1,5 +1,3 @@
-
-
 window.addEventListener("load", async () => {
   await preloadAllAssets();
   generateGallery();
@@ -307,6 +305,115 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+
+// =====================================
+// SLIDESHOW DATA (index only)
+// =====================================
+const slideshowImages: string[] = [
+  "images/hippo/hippoCharacterSheet.jpg",
+  "images/hippo/hippo_Zbrush_Sculpt.jpg",
+  "images/hippo/hippo_Retopologize.jpg",
+  "images/hippo/hippo_UV.jpg",
+  "images/hippo/hippo_Textures.jpg",
+  "images/hippo/hippo_Rig_WP.jpg",
+  "images/hippo/hippo_Unreal_BP.jpg",
+  "images/hippo/hippo_ReTarget.jpg",
+  "images/hippo/hippo_Anim_BP.jpg",
+  "images/hippo/hippoPlay.mp4" // video slide
+];
+
+
+// =====================================
+// SINGLE PROJECT SLIDESHOW (INDEX ONLY)
+// =====================================
+document.addEventListener("DOMContentLoaded", () => {
+  const container = document.getElementById("slideshow-project") as HTMLElement | null;
+  if (!container) return; // Not on index.html
+
+  const track = container.querySelector(".slideshow-track") as HTMLElement | null;
+  const prevBtn = container.querySelector(".slideshow-prev") as HTMLButtonElement | null;
+  const nextBtn = container.querySelector(".slideshow-next") as HTMLButtonElement | null;
+
+  if (!track || !prevBtn || !nextBtn) return;
+
+  // Build slides dynamically from slideshowImages[]
+  slideshowImages.forEach((src) => {
+    const slide = document.createElement("div");
+    slide.className = "slide";
+
+    const isVideo = src.endsWith(".mp4") || src.endsWith(".webm") || src.endsWith(".mov");
+
+    if (isVideo) {
+      const vid = document.createElement("video");
+      vid.src = src;
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.controls = false;
+      vid.style.width = "100%";
+      vid.style.height = "auto";
+      slide.appendChild(vid);
+    } else {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "";
+      img.style.width = "100%";
+      img.style.height = "auto";
+      slide.appendChild(img);
+    }
+
+    // track is guaranteed here, so tell TS:
+    track!.appendChild(slide);
+  });
+
+  const slides = Array.from(track!.querySelectorAll<HTMLElement>(".slide"));
+  if (!slides.length) return;
+
+  // Layout styling
+  track!.style.display = "flex";
+  track!.style.transition = "transform 0.35s ease";
+
+  slides.forEach((slide) => {
+    slide.style.flex = "0 0 100%"; // Each slide = full width
+  });
+
+  let index = 0;
+
+ function showSlide(newIndex: number) {
+  index = (newIndex + slides.length) % slides.length;
+
+  // Pause videos on non-visible slides
+  slides.forEach((slide, i) => {
+    const vid = slide.querySelector("video") as HTMLVideoElement | null;
+    if (vid) {
+      if (i === index) vid.play().catch(() => {});
+      else vid.pause();
+    }
+  });
+
+  // Use the container width as the slide width
+  const slideWidth = container!.getBoundingClientRect().width;
+  const offset = -Math.round(index * slideWidth); // round to avoid subpixel seams
+  track!.style.transform = `translateX(${offset}px)`;
+}
+
+
+
+  prevBtn!.addEventListener("click", () => showSlide(index - 1));
+  nextBtn!.addEventListener("click", () => showSlide(index + 1));
+
+  window.addEventListener("resize", () => showSlide(index));
+
+  // Start on slide 0
+  showSlide(0);
+});
+
+
+
+
+
+
 
 
 
